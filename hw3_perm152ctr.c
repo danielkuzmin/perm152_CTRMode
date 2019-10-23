@@ -10,6 +10,8 @@
 */
 
 #include <stdio.h>
+#include <stdint.h>
+// REMOVE THE BELOW INCLUDE BEFORE TURNING IN
 #include "hw2_perm152.c"
 // in and out are pointers to 64-byte buffers
 // implementation is in a separate file
@@ -21,9 +23,7 @@ void perm152(unsigned char *in, unsigned char *out);
 //           key has (64 - kbytes) zero bytes appended to its end
 static void perm152_bc(unsigned char *in, unsigned char *out, unsigned char *key, int kbytes)
 {
-    kbytes = 0;
-    if (kbytes)
-        printf("you shouldn't be seeing this");
+
 
     unsigned char perm_in[64];
     unsigned char perm_out[64];
@@ -32,18 +32,31 @@ static void perm152_bc(unsigned char *in, unsigned char *out, unsigned char *key
     memcpy(perm_in, in, 64);
 
     // xor key to perm_in
-    uint64_t temp = *perm_in ^ *key;
-    memcpy(perm_in, &temp, 64);
+    for (int i = 0; i<kbytes; i++)
+    {
+        perm_in[i] ^= key[i];
+    }
 
     // perm152 perm_in to perm_out
     perm152(perm_in, perm_out);
 
     // xor key to perm_out
-    uint64_t temp2 = *perm_out ^ *key;
-    memcpy(perm_out, &temp2, 64);
+    for (int i = 0; i<kbytes; i++)
+    {
+        perm_out[i] ^= key[i];
+    }
 
     // copy perm_out to out
     memcpy(out, perm_out, 64);
+}
+
+static void increment(unsigned char *block) {
+    // incomplete
+    int i = 63;
+    do {
+        block[i]+=1;
+        i-=1;
+    }
 }
 
 void perm152ctr(unsigned char *in,    // Input buffer
@@ -57,19 +70,18 @@ void perm152ctr(unsigned char *in,    // Input buffer
     while (nbytes > 0) {
 
         // perm152_bc block to buf
-        perm152_bc(block, block, key, kbytes);
-        memcpy(buf, block, 64);
+        perm152_bc(block, buf, key, kbytes);
 
         // len = min(nbytes, 64)
-        int len = nbytes;
-        if (64 < nbytes)
-            len = 64;
+        int len = (nbytes < 64 ? nbytes : 64);
 
+        // Past this point is wrong
         // xor len bytes of buf with in to out
         uint64_t temp = *buf ^ *in;
         memcpy(out, &temp, (unsigned long) len);
 
         // increment block
+        // call increment function
         in = in + len;
         out = out + len;
         nbytes = nbytes - len;
